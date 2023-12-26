@@ -36,7 +36,7 @@ Host *
 #   IdentityFile ~/.ssh/identity
 #   IdentityFile ~/.ssh/id_rsa
 #   IdentityFile ~/.ssh/id_dsa
-    IdentityFile ~/.ssh/holberton
+    IdentityFile ~/.ssh/school
 #   Port 22
 #   Protocol 2,1
 #   Cipher 3des
