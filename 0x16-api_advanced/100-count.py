@@ -1,61 +1,54 @@
 #!/usr/bin/python3
-"""
-Script to query a list of all hot posts on a given Reddit subreddit.
-"""
-
+"""Function to count words in all hot posts of a given Reddit subreddit."""
 import requests
 
 
-def recurse(subreddit, hot_list=[], after="", count=0):
-    """
-    Recursively retrieves a list of titles of all hot posts
-    on a given subreddit.
-
+def count_words(subreddit, word_list, instances={}, after="", count=0):
+    """Prints counts of given words found in hot posts of a given subreddit.
     Args:
-        subreddit (str): The name of the subreddit.
-        hot_list (list, optional): List to store the post titles.
-                                    Default is an empty list.
-        after (str, optional): Token used for pagination.
-                                Default is an empty string.
-        count (int, optional): Current count of retrieved posts. Default is 0.
-
-    Returns:
-        list: A list of post titles from the hot section of the subreddit.
+        subreddit (str): The subreddit to search.
+        word_list (list): The list of words to search for in post titles.
+        instances (obj): Key/value pairs of words/counts.
+        after (str): The parameter for the next page of the API results.
+        count (int): The parameter of results matched thus far.
     """
-    # Construct the URL for the subreddit's hot posts in JSON format
     url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
-
-    # Define headers for the HTTP request, including User-Agent
     headers = {
         "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/bdov_)"
     }
-
-    # Define parameters for the request, including pagination and limit
     params = {
         "after": after,
         "count": count,
         "limit": 100
     }
-
-    # Send a GET request to the subreddit's hot posts page
     response = requests.get(url, headers=headers, params=params,
                             allow_redirects=False)
+    try:
+        results = response.json()
+        if response.status_code == 404:
+            raise Exception
+    except Exception:
+        print("")
+        return
 
-    # Check if the response status code indicates a not-found error (404)
-    if response.status_code == 404:
-        return None
-    # Parse the JSON response and extract relevant data
-    results = response.json().get("data")
+    results = results.get("data")
     after = results.get("after")
     count += results.get("dist")
-
-    # Append post titles to the hot_list
     for c in results.get("children"):
-        hot_list.append(c.get("data").get("title"))
+        title = c.get("data").get("title").lower().split()
+        for word in word_list:
+            if word.lower() in title:
+                times = len([t for t in title if t == word.lower()])
+                if instances.get(word) is None:
+                    instances[word] = times
+                else:
+                    instances[word] += times
 
-    # If there are more posts to retrieve, recursively call the function
-    if after is not None:
-        return recurse(subreddit, hot_list, after, count)
-
-    # Return the final list of hot post titles
-    return hot_list
+    if after is None:
+        if len(instances) == 0:
+            print("")
+            return
+        instances = sorted(instances.items(), key=lambda kv: (-kv[1], kv[0]))
+        [print("{}: {}".format(k, v)) for k, v in instances]
+    else:
+        count_words(subreddit, word_list, instances, after, count)
