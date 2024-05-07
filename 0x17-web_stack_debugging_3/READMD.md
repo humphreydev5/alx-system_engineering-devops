@@ -38,4 +38,4 @@ Files will be checked with Puppet v3.4
 
 > [!TIP]
 $ apt-get install -y ruby
-$ gem install puppet-lint -v 2.1.1
+> $ gem install puppet-lint -v 2.1.1
